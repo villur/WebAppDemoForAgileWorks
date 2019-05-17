@@ -1,0 +1,77 @@
+﻿@model List<SupportTicket>
+
+@{
+    ViewData["Title"] = "Home Page";
+
+}
+
+
+
+<div class="form-group">
+
+    <form asp-controller="Ticket" asp-action="AddTicket" method="post" name="ticketForm">
+        <div class="d-flex flex-row bd-highlight flex-wrap">
+            <div class="p-2 bd-highlight flex-fill ticket-description">
+                <input type="text" name="description" class="form-control" oninput="clearAlert()" autofocus/>
+            </div>
+            <div class="p-2 bd-highlight">
+                <input type="datetime-local" name="dueDate" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" />
+            </div>
+            <div class="p-2 bd-highlight">
+                <button type="button" onclick="invalidAlert()" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+
+
+
+<table class="table">
+    <tr>
+        <th>Description</th>
+        <th>Entry Date</th>
+        <th>Due Date</th>
+        <th></th>
+    </tr>
+    <tbody>
+        
+        @foreach (var ticket in Model)
+        {
+
+            if(!ticket.DoneDate.HasValue) { 
+                if (ticket.DueDate < DateTime.Now.AddHours(1))
+                {
+                    <tr class="bg-danger">
+                        <td class="align-middle">@ticket.Description</td>
+                        <td class="align-middle">@ticket.EntryDate.ToString("dd.MM.yy HH:mm")</td>
+                        <td class="align-middle">@ticket.DueDate.ToString("dd.MM.yy HH:mm")</td>
+                        <td class="align-middle">
+                            <form asp-controller="Ticket" asp-action="CompleteTicket" method="post">
+                                <input type="hidden" name="id" value="@ticket.Id" />
+                                <button type="submit" class="btn btn-success">Complete</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                }
+                else
+                {
+                    <tr>
+                        <td class="align-middle">@ticket.Description</td>
+                        <td class="align-middle">@ticket.EntryDate.ToString("dd.MM.yy HH:mm")</td>
+                        <td class="align-middle">@ticket.DueDate.ToString("dd.MM.yy HH:mm")</td>
+                        <td class="align-middle">
+                            <form asp-controller="Ticket" asp-action="CompleteTicket" method="post">
+                                <input type="hidden" name="id" value="@ticket.Id" />
+                                <button type="submit" class="btn btn-success">Complete</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                }
+            }
+        }
+    </tbody>
+</table>
