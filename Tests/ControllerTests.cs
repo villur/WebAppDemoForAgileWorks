@@ -65,6 +65,7 @@ namespace Tests
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
 
         }
+
         [Test]
         public void AddTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput()
         {
@@ -80,6 +81,7 @@ namespace Tests
             var redirect = (RedirectToActionResult)controller.CompleteTicket(dbTicket.Id);
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
         }
+
         [Test]
         public void CompleteTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput()
         {         
@@ -91,12 +93,14 @@ namespace Tests
             Assert.That(redirect2.ActionName, Is.EqualTo("Index"));
             Assert.That(redirect2.RouteValues["state"], Is.EqualTo("CompleteFailed"));
         }
+
         [Test]
         public void IndexReturnsAViewWithAListOfSupportTickets()
         {           
             var redirect = (ViewResult)controller.Index();
             Assert.That(redirect.Model as List<SupportTicket>, Contains.Item(dbTicket));
         }
+
         [Test]
         public void CompleteTicketMethodShouldFailWithNullContext()
         {
@@ -107,6 +111,7 @@ namespace Tests
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
             Assert.That(redirect.RouteValues["state"], Is.EqualTo("CompleteFailed"));
         }
+
         [Test]
         public void AddTicketMethodShouldFailWithNullContext()
         {
@@ -116,7 +121,6 @@ namespace Tests
            
             Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
         }
-
 
         [Test]
         public void NullContextIndexShouldReturnNullModel()
@@ -128,6 +132,5 @@ namespace Tests
             Assert.That(redirect.Model, Is.Null);
             Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
         }
-
     }
 }

@@ -17,25 +17,18 @@ namespace WebApplicationDemoForAgileworks.Controllers
             _context = context;
         }
 
-
         public IActionResult Index()
-        {
-            
-            
+        {          
             try
             {
                 return View(_context.SupportTickets.OrderBy(ticket => ticket.DueDate).ToList());              
             }
             catch (Exception)
             {
-
-                return View("DatabaseError");
-                
+                return View("DatabaseError");             
             }
 
-
         }
-
 
         [HttpPost]
         public IActionResult AddTicket(string description, DateTime dueDate)
@@ -48,7 +41,6 @@ namespace WebApplicationDemoForAgileworks.Controllers
             catch (Exception)
             {
                 return RedirectToAction("Index", new { state = "AddFailed" });
-
             }
 
             try
@@ -58,13 +50,10 @@ namespace WebApplicationDemoForAgileworks.Controllers
             }
             catch (Exception)
             {
-
                 return View("DatabaseError");
             }
-
             
             return RedirectToAction("Index");
-
         }
 
         [HttpPost]
@@ -89,18 +78,14 @@ namespace WebApplicationDemoForAgileworks.Controllers
             {
                 return View("DatabaseError");
             }
-           
-            
+                     
             return RedirectToAction("Index");
         }
-
-     
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
     }
 }

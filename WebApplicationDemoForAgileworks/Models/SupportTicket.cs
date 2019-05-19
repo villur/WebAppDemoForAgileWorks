@@ -40,7 +40,6 @@ namespace WebApplicationDemoForAgileworks.Models
                 EntryDate = DateTime.Now;
                 DueDate = dueDate;
             }
-
         }
 
         public void MarkDone()
