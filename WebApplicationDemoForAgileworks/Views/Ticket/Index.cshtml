@@ -1,14 +1,10 @@
 ﻿@model List<SupportTicket>
-
 @{
     ViewData["Title"] = "Home Page";
 
 }
 
-
-
 <div class="form-group">
-
     <form asp-controller="Ticket" asp-action="AddTicket" method="post" name="ticketForm">
         <div class="d-flex flex-row bd-highlight flex-wrap">
             <div class="p-2 bd-highlight flex-fill ticket-description">
@@ -22,11 +18,7 @@
             </div>
         </div>
     </form>
-
 </div>
-
-
-
 
 <table class="table">
     <tr>
@@ -35,8 +27,7 @@
         <th>Due Date</th>
         <th></th>
     </tr>
-    <tbody>
-        
+    <tbody>      
         @foreach (var ticket in Model)
         {
 

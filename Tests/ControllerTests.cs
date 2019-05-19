@@ -55,7 +55,6 @@ namespace Tests
             controller.CompleteTicket(dbTicket.Id);
 
             Assert.That(dbTicket.DoneDate, Is.Not.Null);
-
         }
 
         [Test]
@@ -80,67 +79,54 @@ namespace Tests
         {           
             var redirect = (RedirectToActionResult)controller.CompleteTicket(dbTicket.Id);
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
-
         }
         [Test]
         public void CompleteTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput()
-        {
-           
+        {         
             var redirect = (RedirectToActionResult)controller.CompleteTicket(-100000);
-
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
             Assert.That(redirect.RouteValues["state"], Is.EqualTo("CompleteFailed"));
 
             var redirect2 = (RedirectToActionResult)controller.CompleteTicket(Int32.MaxValue);
-
             Assert.That(redirect2.ActionName, Is.EqualTo("Index"));
             Assert.That(redirect2.RouteValues["state"], Is.EqualTo("CompleteFailed"));
         }
         [Test]
         public void IndexReturnsAViewWithAListOfSupportTickets()
-        {
-            
+        {           
             var redirect = (ViewResult)controller.Index();
             Assert.That(redirect.Model as List<SupportTicket>, Contains.Item(dbTicket));
-
         }
         [Test]
         public void CompleteTicketMethodShouldFailWithNullContext()
         {
-
             TicketController testController = new TicketController(null);
 
             var redirect = (RedirectToActionResult)testController.CompleteTicket(1);
 
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
             Assert.That(redirect.RouteValues["state"], Is.EqualTo("CompleteFailed"));
-
-
         }
         [Test]
         public void AddTicketMethodShouldFailWithNullContext()
         {
-
             TicketController testController = new TicketController(null);
             
             var redirect = (ViewResult)testController.AddTicket("test", DateTime.Today.AddDays(1));
            
             Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
-
         }
 
 
         [Test]
         public void NullContextIndexShouldReturnNullModel()
         {
-
             TicketController testController = new TicketController(null);
 
             var redirect = (ViewResult)testController.Index();
 
             Assert.That(redirect.Model, Is.Null);
             Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
-
         }
 
     }

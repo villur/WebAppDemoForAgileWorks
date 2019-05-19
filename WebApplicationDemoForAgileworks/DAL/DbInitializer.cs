@@ -10,12 +10,10 @@ namespace WebApplicationDemoForAgileworks.DAL
     {
         public static void Initialize(TicketContext context)
         {
-            // context.Database.EnsureCreated();
-
-            // Look for any students.
+            
             if (context.SupportTickets.Any())
             {
-                return;   // DB has been seeded
+                return;
             }
 
             var tickets = new SupportTicket[]
