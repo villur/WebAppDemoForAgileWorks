@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,21 +22,23 @@ namespace WebApplicationDemoForAgileworks.Controllers
 
         public IActionResult Index()
         {           
-            return View(IndexViewModel.Create(_context.SupportTickets.OrderBy(ticket => ticket.DueDate).ToList()));
+            return View(nameof(Index), IndexViewModel.Create(_context.SupportTickets.OrderBy(ticket => ticket.DueDate).ToList()));
         }
 
         [HttpPost]
-        public IActionResult AddTicket(string description, DateTime dueDate)
+        public IActionResult AddTicket([MaxLength(5)]string description, DateTime dueDate)
         {
+            //Fix model validation
 
             if (ModelState.IsValid)
             {
                 SupportTicket ticket = new SupportTicket(description, dueDate);
                 _context.SupportTickets.Add(ticket);
                 _context.SaveChanges();
+                RedirectToAction("Index");
             }
 
-            return RedirectToAction("Index");
+            return Index();
         }
 
         [HttpPost]
