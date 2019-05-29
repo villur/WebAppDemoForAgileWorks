@@ -17,22 +17,17 @@ namespace WebApplicationDemoForAgileworks.Models
         [MaxLength(200)]
         public string Description { get; set; }
 
-        [Required]
-        [DisplayFormat(DataFormatString = "{yyyy-MM-dd-hh-mm}")]
         public DateTime EntryDate { get; set; }
 
-        [Required]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{yyyy-MM-dd-hh-mm}")]
         public DateTime DueDate { get; set; }
 
         public DateTime? DoneDate { get; set; }
 
         public SupportTicket(string description, DateTime dueDate)
         {
-            if (description == null || description.Length < 1 || dueDate <= DateTime.Now)
+            if (string.IsNullOrWhiteSpace(description) || dueDate <= DateTime.Now)
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Constructing ticket failed in ticket constructor");
             }
             else
             {

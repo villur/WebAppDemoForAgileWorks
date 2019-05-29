@@ -8,129 +8,109 @@ using System.Text;
 using WebApplicationDemoForAgileworks.Controllers;
 using WebApplicationDemoForAgileworks.DAL;
 using WebApplicationDemoForAgileworks.Models;
+using WebApplicationDemoForAgileworks.ViewModel.Ticket;
 
 namespace Tests
 {
     [TestFixture]
     class ControllerTests
     {
-
-        private readonly TicketContext context;
+        private TicketContext context;
         private TicketController controller;
-        private string uniqueDescription;
-        private SupportTicket dbTicket;
+        private int dbTicket2Id;
 
-        public ControllerTests()
+        [SetUp]
+        public void Setup()
         {
             var optionsBuilder = new DbContextOptionsBuilder<TicketContext>();
-            optionsBuilder.UseInMemoryDatabase(databaseName: "SupportTickets");
-            uniqueDescription = "e9rt8gjhe0gr8" + Guid.NewGuid();
+            optionsBuilder.UseInMemoryDatabase(databaseName: "SupportTickets" + Guid.NewGuid());
+
             context = new TicketContext(optionsBuilder.Options);
+            
             controller = new TicketController(context);
-            controller.AddTicket(uniqueDescription, DateTime.Today.AddDays(1));
-            dbTicket = context.SupportTickets.Where(s => s.Description == uniqueDescription).FirstOrDefault();
         }
-        
+
 
         [Test]
         public void AddTicketToDatabaseThoroughControllerAddTicketMethod()
-        {
-            var uniqueDescription = "e9rt8gjhe0gr8123123" + Guid.NewGuid();
-            controller.AddTicket(uniqueDescription, DateTime.Today.AddDays(1));
-
-            var dbTicket = context.SupportTickets.Where(s => s.Description == uniqueDescription).FirstOrDefault<SupportTicket>();
-
-            Assert.That(dbTicket.Description, Is.EqualTo(uniqueDescription));
+        {       
+            controller.AddTicket("Test", DateTime.Today.AddDays(1));
+            Assert.That(context.SupportTickets.Count(), Is.EqualTo(1));
+            var dbTicket = context.SupportTickets.Single();
+            Assert.That(dbTicket.Description, Is.EqualTo("Test"));
             Assert.That(dbTicket.DueDate, Is.EqualTo(DateTime.Today.AddDays(1)));
         }
 
         [Test]
         public void AddDoneDateToTicketThroughControllerCompleteTicketMethod()
         {
-            var uniqueDescription = "e9rt8gjhe0gr8444" + Guid.NewGuid();
-            controller.AddTicket(uniqueDescription, DateTime.Today.AddDays(1));
+            SupportTicket dbTicket2 = new SupportTicket("Test2", DateTime.Today.AddDays(1));
+            context.Add(dbTicket2);
+            context.SaveChanges();
+            dbTicket2Id = dbTicket2.Id;
 
-            var dbTicket = context.SupportTickets.Where(s => s.Description == uniqueDescription).FirstOrDefault<SupportTicket>();
+            controller.CompleteTicket(dbTicket2Id);
 
-            controller.CompleteTicket(dbTicket.Id);
-
-            Assert.That(dbTicket.DoneDate, Is.Not.Null);
+            Assert.That(dbTicket2.DoneDate, Is.Not.Null);
         }
 
         [Test]
         public void AddTicketMethodShouldRedirectToIndexOnSuccess()
         {
-            var redirect = (RedirectToActionResult)controller.AddTicket(uniqueDescription, DateTime.Today.AddDays(1));
+            var redirect = (RedirectToActionResult)controller.AddTicket("Test", DateTime.Today.AddDays(1));
 
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
-
-        }
-
-        [Test]
-        public void AddTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput()
-        {
-            var redirect = (RedirectToActionResult)controller.AddTicket(null, DateTime.Today.AddDays(-1));
-
-            Assert.That(redirect.ActionName, Is.EqualTo("Index"));
-            Assert.That(redirect.RouteValues["state"], Is.EqualTo("AddFailed"));
         }
 
         [Test]
         public void CompleteTicketMethodShouldRedirectToIndexOnSuccess()
-        {           
-            var redirect = (RedirectToActionResult)controller.CompleteTicket(dbTicket.Id);
+        {
+            SupportTicket dbTicket2 = new SupportTicket("Test2", DateTime.Today.AddDays(1));
+            context.Add(dbTicket2);
+            context.SaveChanges();
+            dbTicket2Id = dbTicket2.Id;
+            var redirect = (RedirectToActionResult)controller.CompleteTicket(dbTicket2Id);
             Assert.That(redirect.ActionName, Is.EqualTo("Index"));
         }
 
-        [Test]
-        public void CompleteTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput()
+        [TestCase(-10000)]
+        [TestCase(Int32.MaxValue)]
+        public void CompleteTicketMethodShouldRedirectToIndexWithFailedStateOnInvalidInput(int id)
         {         
-            var redirect = (RedirectToActionResult)controller.CompleteTicket(-100000);
-            Assert.That(redirect.ActionName, Is.EqualTo("Index"));
-            Assert.That(redirect.RouteValues["state"], Is.EqualTo("CompleteFailed"));
-
-            var redirect2 = (RedirectToActionResult)controller.CompleteTicket(Int32.MaxValue);
-            Assert.That(redirect2.ActionName, Is.EqualTo("Index"));
-            Assert.That(redirect2.RouteValues["state"], Is.EqualTo("CompleteFailed"));
+            var result = controller.CompleteTicket(id);
+            Assert.That(result, Is.TypeOf<NotFoundResult>());
         }
 
         [Test]
         public void IndexReturnsAViewWithAListOfSupportTickets()
         {           
             var redirect = (ViewResult)controller.Index();
-            Assert.That(redirect.Model as List<SupportTicket>, Contains.Item(dbTicket));
+            Assert.That(redirect.Model, Is.TypeOf<IndexViewModel>());
         }
 
         [Test]
-        public void CompleteTicketMethodShouldFailWithNullContext()
+        public void IndexMethodReturnsOrderedByDueDateList()
         {
-            TicketController testController = new TicketController(null);
 
-            var redirect = (RedirectToActionResult)testController.CompleteTicket(1);
+            SupportTicket dbTicket1 = new SupportTicket("A", DateTime.Today.AddDays(1));
+            SupportTicket dbTicket3 = new SupportTicket("B", DateTime.Today.AddDays(5));
+            SupportTicket dbTicket2 = new SupportTicket("C", DateTime.Today.AddDays(3));
 
-            Assert.That(redirect.ActionName, Is.EqualTo("Index"));
-            Assert.That(redirect.RouteValues["state"], Is.EqualTo("CompleteFailed"));
+            context.Add(dbTicket1);
+            context.Add(dbTicket3);
+            context.Add(dbTicket2);
+            context.SaveChanges();
+
+            var redirect = (ViewResult)controller.Index();
+
+            var ticketModels = ((IndexViewModel)redirect.Model).Tickets;
+            var ticketModelsTest = ticketModels.OrderBy(t => t.DueDate);
+
+            //var list2 = list1.OrderBy(t => t.DueDate);
+            CollectionAssert.AreEqual(ticketModelsTest, ticketModels);
+            Assert.That(ticketModels, Is.Ordered.By("DueDate"));
+
         }
 
-        [Test]
-        public void AddTicketMethodShouldFailWithNullContext()
-        {
-            TicketController testController = new TicketController(null);
-            
-            var redirect = (ViewResult)testController.AddTicket("test", DateTime.Today.AddDays(1));
-           
-            Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
-        }
-
-        [Test]
-        public void NullContextIndexShouldReturnNullModel()
-        {
-            TicketController testController = new TicketController(null);
-
-            var redirect = (ViewResult)testController.Index();
-
-            Assert.That(redirect.Model, Is.Null);
-            Assert.That(redirect.ViewName, Is.EqualTo("DatabaseError"));
-        }
     }
 }

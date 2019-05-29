@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using WebApplicationDemoForAgileworks.DAL;
 using WebApplicationDemoForAgileworks.Models;
+using WebApplicationDemoForAgileworks.ViewModel.Ticket;
 
 namespace WebApplicationDemoForAgileworks.Controllers
 {
@@ -14,71 +15,42 @@ namespace WebApplicationDemoForAgileworks.Controllers
         private readonly TicketContext _context;
         public TicketController(TicketContext context)
         {
-            _context = context;
+            
+            _context = context;           
         }
 
         public IActionResult Index()
-        {          
-            try
-            {
-                return View(_context.SupportTickets.OrderBy(ticket => ticket.DueDate).ToList());              
-            }
-            catch (Exception)
-            {
-                return View("DatabaseError");             
-            }
-
+        {           
+            return View(IndexViewModel.Create(_context.SupportTickets.OrderBy(ticket => ticket.DueDate).ToList()));
         }
 
         [HttpPost]
         public IActionResult AddTicket(string description, DateTime dueDate)
         {
-            SupportTicket ticket;
-            try
-            {
-                ticket = new SupportTicket(description, dueDate);
-            }
-            catch (Exception)
-            {
-                return RedirectToAction("Index", new { state = "AddFailed" });
-            }
 
-            try
+            if (ModelState.IsValid)
             {
+                SupportTicket ticket = new SupportTicket(description, dueDate);
                 _context.SupportTickets.Add(ticket);
                 _context.SaveChanges();
             }
-            catch (Exception)
-            {
-                return View("DatabaseError");
-            }
-            
+
             return RedirectToAction("Index");
         }
 
         [HttpPost]
         public IActionResult CompleteTicket(int id)
         {
-            SupportTicket ticket;
-            if (id > 0 && _context?.SupportTickets.Find(id) != null)
+            SupportTicket ticket = _context.SupportTickets.Find(id);
+
+            if (ticket == null)
             {
-                ticket = _context.SupportTickets.Find(id);
-                ticket.MarkDone();
-            }
-            else
-            {
-                return RedirectToAction("Index", new { state = "CompleteFailed" });
+                return NotFound();
             }
 
-            try
-            {
-                _context.SaveChanges();
-            }
-            catch (Exception)
-            {
-                return View("DatabaseError");
-            }
-                     
+            ticket.MarkDone();
+            _context.SaveChanges();
+            
             return RedirectToAction("Index");
         }
 
